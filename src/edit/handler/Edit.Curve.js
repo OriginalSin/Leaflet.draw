@@ -125,7 +125,7 @@ L.Edit.Curve = L.Handler.extend({
 		while (i < coords.length) {
 			var current = coords[i];
 			i += 1;
-			if (typeof current === 'string') {
+			if (typeof current === 'string') {
 				if (coordsAccum.length) {
 					this.addFromCoords(lastInstruction, coordsAccum);
 					coordsAccum = [];
@@ -137,6 +137,7 @@ L.Edit.Curve = L.Handler.extend({
 		}
 		this.addFromCoords(lastInstruction, coordsAccum);
         this._setupControlMarkersEdit();
+        this._createMiddleMarkers();
 	},
 
 	addFromCoords: function(instruction, coords) {
@@ -260,7 +261,7 @@ L.Edit.Curve = L.Handler.extend({
     _initMarkerArgs: function(marker, index, coords, symetric, lineArgs) {
         marker._coordsIndex = coords
         marker._index = index;
-        if (symetric) { marker._symetricArgs = symetric; }
+        if (symetric) { marker._symetricArgs = symetric; }
         marker._line = lineArgs;
         marker.on('drag', this._onDragMarker, this);
         this._setupDragStartEnd(marker);
@@ -276,7 +277,7 @@ L.Edit.Curve = L.Handler.extend({
     },
 
     _updateTranslate: function(e, translatedMarkers) {
-        if (!e.target.previousLatlng) {
+        if (!e.target.previousLatlng) {
             e.target.previousLatlng = e.target._latlng;
         }
         var difLat = e.latlng.lat - e.target.previousLatlng.lat; 
@@ -301,29 +302,39 @@ L.Edit.Curve = L.Handler.extend({
     },
 
     _onDragMarker: function(e) {
-        var indexMarker = e.target._index;
-        var coordsArray = e.target._coordsIndex;
+        var marker = e.target;
+        var indexMarker = marker._index;
+        var coordsArray = marker._coordsIndex;
         var latlng = [e.latlng.lat, e.latlng.lng];
+console.log('_onDragMarker', marker._middleLeft, marker._middleRight, this._latlngs.length, this._instructions);
         if (indexMarker != this.markerSelected  ) {
             this._editMarkers.clearLayers();
-            if (e.target._setupDouble) { this._setupDoubleHandle(e); }
-            if (e.target._setupSimple) { this._setupSimpleHandle(e); }
+            if (marker._setupDouble) { this._setupDoubleHandle(e); }
+            if (marker._setupSimple) { this._setupSimpleHandle(e); }
             this.markerSelected = indexMarker;
         }
-        if (e.target._line) {
-            this._updateLine(e.target._line);
+        if (marker._line) {
+            this._updateLine(marker._line);
         }
-        var symetric = e.target._symetricArgs;
-        if (symetric) {
+        var symetric = marker._symetricArgs;
+        if (symetric) {
             this._updateSymetric(latlng, symetric);
         }
-        if (e.target._translateArgs) {
-            this._updateTranslate(e, e.target._translateArgs);
+        if (marker._translateArgs) {
+            this._updateTranslate(e, marker._translateArgs);
         }
         for (var i = 0; i < coordsArray.length; i++) {
             var coords = coordsArray[i];
             this._latlngs[coords[0]][coords[1]] = latlng;
         }
+		if (marker._middleLeft) {
+			var mlatlng = this._getMiddleLatLng(marker, this._markers[indexMarker - 1]);
+			marker._middleLeft.setLatLng(mlatlng);
+		}
+		if (marker._middleRight) {
+			var mlatlng = this._getMiddleLatLng(marker, this._markers[indexMarker + 1]);
+			marker._middleRight.setLatLng(mlatlng);
+		}
         this._updatePath();
     },
 
@@ -341,8 +352,88 @@ L.Edit.Curve = L.Handler.extend({
         }
         tooltip.updateContent(updated);
     },
+	_createMiddleMarkers: function () {
+		var markerLeft, markerRight, len = this._markers.length;
 
+		for (var i = 0, j = len - 1; i < len; j = i++) {
+			if (i === 0) { continue; }
 
+			markerLeft = this._markers[j];
+			markerRight = this._markers[i];
+
+			this._createMiddleMarker(markerLeft, markerRight);
+		}
+	},
+	_getMiddleLatLng: function (marker1, marker2) {
+		var map = this._map,
+			p1 = map.project(marker1.getLatLng()),
+			p2 = map.project(marker2.getLatLng());
+
+		return map.unproject(p1._add(p2)._divideBy(2));
+	},
+
+	_createMiddleMarker: function (marker1, marker2) {
+		var latlng = this._getMiddleLatLng(marker1, marker2),
+			marker = this._createMarker(latlng, marker2._index),
+			onDragEnd;
+
+		marker.setOpacity(0.6);
+		marker1._middleRight = marker2._middleLeft = marker;
+
+		onDragEnd = function (e) {
+			marker.off('dragend', onDragEnd, this);
+			var latlng = e.target._latlng;
+			var coordsArray = [marker2._coordsIndex[0]];
+console.log('__', this._latlngs.length, this._instructions, coordsArray);
+			for (var i = 0; i < coordsArray.length; i++) {
+				var coords = coordsArray[i];
+				this._instructions.splice(coords[0], 0, 'L');
+				this._latlngs.splice(coords[0], 0, [[latlng.lat, latlng.lng]]);
+			}
+console.log('_instructions', this._latlngs.length, this._instructions);
+
+			this._setupEdition(this._path._coords);
+			this.markerSelected = 0;
+		};
+
+		marker
+			.on('dragend', onDragEnd, this);
+
+		this._markerGroup.addLayer(marker);
+	},
+
+	_createMarker: function (latlng, index) {
+		// Extending L.Marker in TouchEvents.js to include touch.
+		var marker = new L.Marker.Touch(latlng, {
+			draggable: true,
+			icon: L.divIcon({ iconSize: [5, 5], className: "leaflet-div-icon leaflet-editing-icon middle"})
+		});
+
+		marker._origLatLng = latlng;
+		marker._index = index;
+
+		marker
+			.on('dragstart', this._onMarkerDragStart, this);
+
+		this._markerGroup.addLayer(marker);
+
+		return marker;
+	},
+	_onMarkerDragStart: function (e) {
+		var marker = e.target;
+		var latlng = marker._latlng;
+		var i = marker._index;
+
+		this._instructions.splice(i, 0, 'L');
+		this._latlngs.splice(i, 0, [[latlng.lat, latlng.lng]]);
+
+		marker.off('dragstart', this._onMarkerDragStart, this);
+		marker.on('drag', this._onDragMarker, this);
+		marker._coordsIndex = [[i, 0]];
+		this._markers.splice(i, 0, marker);
+
+		this._updatePath();
+	}
 });
 
 if (L.Curve) {

@@ -232,7 +232,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 				.on('MSPointerMove', this._onTouchMove, this)
 				.on('touchend', this._onMarkerDragEnd, this)
 				.on('MSPointerUp', this._onMarkerDragEnd, this);
-		} else {
+		} else if (layer.editing) {
 			layer.editing.enable();
 		}
 	},
@@ -267,7 +267,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 				.off('MSPointerMove', this._onTouchMove, this)
 				.off('touchend', this._onMarkerDragEnd, this)
 				.off('MSPointerUp', this._onMarkerDragEnd, this);
-		} else {
+		} else if (layer.editing) {
 			layer.editing.disable();
 		}
 	},

@@ -8,7 +8,10 @@ var deps = {
 	},
 	
 	Common: {
-		src: ['ext/CurveCommon.js'],
+		src: [
+			'ext/Curve.js',
+			'ext/CurveCommon.js'
+		],
 		desc: 'The files shared with multiple objects of the plugin.'
 	},
 

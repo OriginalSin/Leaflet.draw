@@ -59,7 +59,7 @@ CurveCommon = {
 		var asArrays = [];
 		for (var i = 0; i < latlngArray.length; ++i) {
 			var latlng = latlngArray[i];
-			if (!Array.isArray(latlng)) { latlng = [latlng.lat, latlng.lng];}
+			if (!Array.isArray(latlng)) { latlng = [latlng.lat, latlng.lng]; }
 			asArrays.push(latlng);
 		}
 		return asArrays;

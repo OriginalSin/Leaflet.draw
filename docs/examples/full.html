@@ -56,14 +56,29 @@
     var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib }),
-            map = new L.Map('map', { center: new L.LatLng(51.505, -0.04), zoom: 13 }),
+           // map = new L.Map('map', { center: new L.LatLng(51.505, 0.04), zoom: 13 }),
+            map = new L.Map('map', { center: new L.LatLng(50.54,28.52), zoom: 5 }),
             drawnItems = L.featureGroup().addTo(map);
-    L.control.layers({
-        'osm': osm.addTo(map),
-        "google": L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
-            attribution: 'google'
-        })
-    }, { 'drawlayer': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map);
+//		var curve = L.curve(['M', [51.50, -0.02], 'L', [51.49, 0.01], [51.509, 0.02], 'C', [51.504, 0.04], [51.505, 0.04], [51.525, 0.02]]).addTo(drawnItems);
+var curve = L.curve(['M',[50.54136296522163,28.520507812500004],
+					'C',[52.214338608258224,28.564453125000004],
+						[48.45835188280866,33.57421875000001],
+						[50.680797145321655,33.83789062500001],
+					'V',[48.40003249610685],
+					'L',[47.55839225859763,30.201171875],
+						[48.50003249610685,29.564453125000004],
+					'L',[47.45839225859763,31.201171875],
+						[48.40003249610685,28.564453125000004],
+					'Z']).addTo(drawnItems);
+		curve.editing.enable();
+    L.control.layers(
+	{
+        // 'osm': osm.addTo(map),
+        // "google": L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
+            // attribution: 'google'
+        // })
+    }
+	, { 'drawlayer': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map);
     map.addControl(new L.Control.Draw({
         edit: {
             featureGroup: drawnItems,

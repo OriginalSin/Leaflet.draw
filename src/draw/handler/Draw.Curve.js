@@ -142,7 +142,7 @@ L.Draw.Curve = L.Draw.Feature.extend({
 		this._updateFinishMarker();
 		this._futurePathDef = [];
 		this._futurePath.setPath([]);
-		if (!this._map.hasLayer(this._path)) {
+		if (!this._map.hasLayer(this._path)) {
 			this._map.addLayer(this._path);
 		}
 		this._updatePath();
@@ -179,7 +179,7 @@ L.Draw.Curve = L.Draw.Feature.extend({
 		var lastCoords = this._getLastPoint();
 		var lastLatlngs = this._getLastLatLngs();
 		var startPoint = ['M', lastCoords];
-		if (lastInstruction == 'M' || lastInstruction == 'L') {
+		if (lastInstruction == 'M' || lastInstruction == 'L') {
 			if (this.draggingControl) {
 				this._futurePathDef = ['C', lastCoords, latlng, this._futureDest];
 			}
@@ -248,7 +248,7 @@ L.Draw.Curve = L.Draw.Feature.extend({
 	},
 
 	_fireCreatedEvent: function () {
-		var path = new this.Curve(this._path.getPath(), this.options.shapeOptions);
+		var path = new L.Curve(this._path.getPath(), this.options.shapeOptions).addTo(this._map);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, path);
 	}
 });
