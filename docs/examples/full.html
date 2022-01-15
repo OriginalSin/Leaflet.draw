@@ -4,6 +4,7 @@
     <title>Leaflet.draw vector editing handlers</title>
 
     <script src="libs/leaflet-src.js"></script>
+    <script src="libs/Curve.js"></script>
     <link rel="stylesheet" href="libs/leaflet.css"/>
 
     <script src="../../src/Leaflet.draw.js"></script>
@@ -19,6 +20,7 @@
     <script src="../../src/ext/Polygon.Intersect.js"></script>
     <script src="../../src/ext/Polyline.Intersect.js"></script>
     <script src="../../src/ext/TouchEvents.js"></script>
+    <script src="../../src/ext/CurveCommon.js"></script>
 
     <script src="../../src/draw/DrawToolbar.js"></script>
     <script src="../../src/draw/handler/Draw.Feature.js"></script>
@@ -29,6 +31,7 @@
     <script src="../../src/draw/handler/Draw.CircleMarker.js"></script>
     <script src="../../src/draw/handler/Draw.Polygon.js"></script>
     <script src="../../src/draw/handler/Draw.Rectangle.js"></script>
+    <script src="../../src/draw/handler/Draw.Curve.js"></script>
 
 
     <script src="../../src/edit/EditToolbar.js"></script>
@@ -43,6 +46,8 @@
     <script src="../../src/edit/handler/Edit.Marker.js"></script>
     <script src="../../src/edit/handler/Edit.CircleMarker.js"></script>
     <script src="../../src/edit/handler/Edit.Circle.js"></script>
+    <script src="../../src/edit/handler/Edit.Curve.js"></script>
+    
 </head>
 <body>
 <div id="map" style="width: 800px; height: 600px; border: 1px solid #ccc"></div>
@@ -51,35 +56,51 @@
     var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib }),
-            map = new L.Map('map', { center: new L.LatLng(51.505, -0.04), zoom: 13 }),
+           // map = new L.Map('map', { center: new L.LatLng(51.505, 0.04), zoom: 13 }),
+            map = new L.Map('map', { center: new L.LatLng(50.54,28.52), zoom: 5 }),
             drawnItems = L.featureGroup().addTo(map);
-    L.control.layers({
-        'osm': osm.addTo(map),
-        "google": L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
-            attribution: 'google'
-        })
-    }, { 'drawlayer': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map);
+//		var curve = L.curve(['M', [51.50, -0.02], 'L', [51.49, 0.01], [51.509, 0.02], 'C', [51.504, 0.04], [51.505, 0.04], [51.525, 0.02]]).addTo(drawnItems);
+var curve = L.curve(['M',[50.54136296522163,28.520507812500004],
+					'C',[52.214338608258224,28.564453125000004],
+						[48.45835188280866,33.57421875000001],
+						[50.680797145321655,33.83789062500001],
+					'V',[48.40003249610685],
+					'L',[47.55839225859763,30.201171875],
+						[48.50003249610685,29.564453125000004],
+					'L',[47.45839225859763,31.201171875],
+						[48.40003249610685,28.564453125000004],
+					'Z']).addTo(drawnItems);
+		curve.editing.enable();
+    L.control.layers(
+	{
+        // 'osm': osm.addTo(map),
+        // "google": L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
+            // attribution: 'google'
+        // })
+    }
+	, { 'drawlayer': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map);
     map.addControl(new L.Control.Draw({
         edit: {
             featureGroup: drawnItems,
             poly: {
                 allowIntersection: false
-            }
+            },
         },
         draw: {
             polygon: {
                 allowIntersection: false,
-                showArea: true
-            }
+                showArea: true,
+            },
         }
     }));
 
     map.on(L.Draw.Event.CREATED, function (event) {
         var layer = event.layer;
-
         drawnItems.addLayer(layer);
     });
 
 </script>
 </body>
 </html>
+
+

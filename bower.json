@@ -1,7 +1,11 @@
 {
   "name": "leaflet-draw",
   "description": "Vector drawing plugin for Leaflet",
+<<<<<<< HEAD
   "version": "1.0.2",
+=======
+  "version": "1.0.3",
+>>>>>>> curve_built
   "main": [
     "dist/leaflet.draw.js",
     "dist/leaflet.draw.css",
